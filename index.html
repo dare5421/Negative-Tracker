@@ -4,15 +4,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ردیاب عادت</title>
-  <link rel="manifest" href="manifest.json">
+  <title>ردیاب منفی</title>
+  <link rel="manifest" href="manifest.json" />
   <style>
     body {
       font-family: sans-serif;
+      background: #f7f7f7;
       direction: rtl;
-      padding: 20px;
-      background: #f2f2f2;
-      color: #333;
+      padding: 16px;
+      margin: 0;
     }
     h2, h3 {
       text-align: center;
@@ -20,32 +20,34 @@
     .counter {
       display: flex;
       justify-content: center;
-      gap: 10px;
+      gap: 12px;
       flex-wrap: wrap;
       margin-bottom: 20px;
     }
     .pill {
-      background: #fff;
-      border: 1px solid #ccc;
-      padding: 10px 16px;
-      border-radius: 30px;
+      transition: background 0.2s;
+  
+      width: 64px;
+      height: 64px;
+      background: white;
+      border-radius: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 28px;
+      position: relative;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       cursor: pointer;
-      position: relative;
     }
     .badge {
+      position: absolute;
+      top: -5px;
+      left: -5px;
       background: red;
       color: white;
-      border-radius: 999px;
-      padding: 2px 8px;
       font-size: 12px;
-      position: absolute;
-      top: -8px;
-      left: -8px;
-    }
-    .sleep-input {
-      text-align: center;
-      margin-bottom: 20px;
+      padding: 2px 6px;
+      border-radius: 999px;
     }
     table {
       width: 100%;
@@ -53,170 +55,140 @@
       margin-top: 10px;
     }
     th, td {
-      padding: 8px;
+      padding: 6px;
       border: 1px solid #ccc;
       text-align: center;
     }
     button {
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 14px;
+      transition: background 0.2s;
+  }
+  button:hover {
+      background-color: #1565c0;
+  }
       padding: 4px 8px;
+      font-size: 14px;
       cursor: pointer;
+    }
+    .sleep-input {
+      text-align: center;
+      margin-bottom: 20px;
     }
   </style>
 </head>
 <body>
-  <h2>ردیاب رفتارهای منفی</h2>
+  <h2>📱 ردیاب رفتارهای منفی</h2>
+
   <div class="counter">
-    <div class="pill" onclick="log('🚬')">🚬 <span class="badge" id="cigCount">0</span></div>
-    <div class="pill" onclick="log('🔞/خودارضایی')">🔞 <span class="badge" id="pornCount">0</span></div>
+    <div class="pill" style="background:#ffa726;" onclick="addLog('🚬')">🚬 <span class="badge" id="cigCount">0</span></div>
+    <div class="pill" style="background:#ef5350;" onclick="addLog('🔞')">🔞 <span class="badge" id="pornCount">0</span></div>
   </div>
 
   <div class="sleep-input">
-    <label>🛌 ساعت خواب: </label>
+    🛌 ساعت خواب:
     <input type="time" id="sleepTime">
-    <button onclick="logSleep()">ثبت</button>
+    <button onclick="addSleep()">ثبت</button>
   </div>
 
-  <div>
-    <h3>📋 لاگ امروز</h3>
-    <table>
-      <thead><tr><th>ساعت</th><th>رفتار</th><th>حذف</th></tr></thead>
-      <tbody id="logBody"></tbody>
-    </table>
-  </div>
+  <h3>📋 لاگ امروز / انتخاب‌شده</h3>
+  <table>
+    <thead><tr><th>ساعت</th><th>نوع</th><th>❌</th></tr></thead>
+    <tbody id="logTable"></tbody>
+  </table>
 
-  <div>
-    <h3>📊 خلاصه روزهای اخیر</h3>
-    <table>
-      <thead><tr><th>تاریخ</th><th>سیگار</th><th>پورن</th><th>خواب</th></tr></thead>
-      <tbody id="summaryLogBody"></tbody>
-    </table>
-  </div>
+  <h3>📊 خلاصه روزانه</h3>
+  <table>
+    <thead><tr><th>📅</th><th>🚬</th><th>🔞</th><th>🛌</th></tr></thead>
+    <tbody id="summaryTable"></tbody>
+  </table>
 
 <script>
-window.addEventListener('DOMContentLoaded', function () {
-  const logBody = document.getElementById("logBody");
-  const summaryLogBody = document.getElementById("summaryLogBody");
-  let logs = JSON.parse(localStorage.getItem("negativeLogsMinimal") || "[]");
+let logs = JSON.parse(localStorage.getItem("logs") || "[]");
 
-  function save() {
-    localStorage.setItem("negativeLogsMinimal", JSON.stringify(logs));
-    render();
-    renderSummaryTable();
+function save() {
+  localStorage.setItem("logs", JSON.stringify(logs));
+  renderToday();
+  renderSummary();
+}
 
-  // 🔔 اعلان روزانه در ساعت ۹ شب
-  if (Notification && Notification.permission !== "granted") {
-    Notification.requestPermission();
-  }
+function addLog(type) {
+  const timestamp = new Date().toISOString();
+  logs.push({ type, timestamp });
+  save();
+}
 
-  function showDailyReminder() {
-    if (Notification && Notification.permission === "granted") {
-      new Notification("یادآوری", {
-        body: "یادت نره رفتارهای امروز رو ثبت کنی",
-        icon: "icon-192.png"
-      });
-    }
-  }
-
-  setInterval(() => {
-    const now = new Date();
-    if (now.getHours() === 21 && now.getMinutes() === 0) {
-      showDailyReminder();
-    }
-  }, 60000); // چک هر یک دقیقه
-
-  }
-
-  window.log = function(type) {
-    const fullDate = new Date().toISOString();
-    logs.push({ fullDate, type });
+function addSleep() {
+  const t = document.getElementById("sleepTime").value;
+  if (t) {
+    const timestamp = new Date().toISOString().split("T")[0] + "T" + t + ":00";
+    logs.push({ type: "🛌", timestamp });
+    document.getElementById("sleepTime").value = "";
     save();
   }
+}
 
-  window.logSleep = function() {
-    const t = document.getElementById("sleepTime").value;
-    if (t) {
-      const fullDate = new Date().toISOString().slice(0,10) + "T" + t + ":00";
-      logs.push({ fullDate, type: "🛌 ساعت خواب" });
-      save();
-      document.getElementById("sleepTime").value = "";
-    }
-  }
+function deleteLog(ts, type) {
+  logs = logs.filter(e => !(e.timestamp === ts && e.type === type));
+  save();
+}
 
-  window.deleteRow = function(fullDate, type) {
-    logs = logs.filter(entry => !(entry.fullDate === fullDate && entry.type === type));
-    save();
-  }
+function renderToday() {
+  const today = new Date().toISOString().split("T")[0];
+  loadDay(today);
+}
 
-  function render() {
-    const now = new Date();
-    const todayLogs = logs.filter(entry => {
-      const d = new Date(entry.fullDate);
-      if (d.getHours() < 6) d.setDate(d.getDate() - 1);
-      return d.toDateString() === now.toDateString();
-    });
+function loadDay(date) {
+  const dayLogs = logs.filter(e => e.timestamp.startsWith(date));
+  const logTable = document.getElementById("logTable");
+  const cig = dayLogs.filter(e => e.type === "🚬").length;
+  const porn = dayLogs.filter(e => e.type === "🔞").length;
+  document.getElementById("cigCount").innerText = cig;
+  document.getElementById("pornCount").innerText = porn;
+  logTable.innerHTML = "";
+  dayLogs.reverse().forEach(e => {
+    const time = new Date(e.timestamp).toTimeString().slice(0,5);
+    logTable.innerHTML += `<tr>
+      <td>${time}</td>
+      <td>${e.type}</td>
+      <td><button onclick="deleteLog('${e.timestamp}', '${e.type}')">🗑</button></td>
+    </tr>`;
+  });
+}
 
-    document.getElementById('cigCount').innerText = todayLogs.filter(e => e.type === '🚬').length;
-    document.getElementById('pornCount').innerText = todayLogs.filter(e => e.type === '🔞/خودارضایی').length;
+function renderSummary() {
+  const grouped = {};
+  logs.forEach(e => {
+    const d = e.timestamp.split("T")[0];
+    if (!grouped[d]) grouped[d] = { "🚬": 0, "🔞": 0, "🛌": "-" };
+    if (e.type === "🛌") grouped[d]["🛌"] = new Date(e.timestamp).toTimeString().slice(0,5);
+    else grouped[d][e.type]++;
+  });
 
-    logBody.innerHTML = "";
-    todayLogs.reverse().forEach(entry => {
-      const time = new Date(entry.fullDate).toTimeString().slice(0, 5);
-      logBody.innerHTML += `<tr>
-        <td>${time}</td>
-        <td>${entry.type}</td>
-        <td><button onclick="deleteRow('${entry.fullDate}', '${entry.type}')">🗑</button></td>
-      </tr>`;
-    });
-  }
+  const sorted = Object.entries(grouped).sort((a,b) => b[0].localeCompare(a[0])).slice(0, 10);
+  const summaryTable = document.getElementById("summaryTable");
+  summaryTable.innerHTML = "";
+  sorted.forEach(([date, stats]) => {
+    const row = document.createElement("tr");
+    row.style.cursor = "pointer";
+    row.onclick = () => loadDay(date);
+    row.innerHTML = `
+      <td>${date}</td>
+      <td>${stats["🚬"]}</td>
+      <td>${stats["🔞"]}</td>
+      <td>${stats["🛌"]}</td>
+    `;
+    summaryTable.appendChild(row);
+  });
+}
 
-  function renderSummaryTable() {
-    const days = {};
-    logs.forEach(entry => {
-      const d = new Date(entry.fullDate);
-      if (d.getHours() < 6) d.setDate(d.getDate() - 1);
-      const dateKey = d.toISOString().slice(0, 10);
-      if (!days[dateKey]) days[dateKey] = { cig: 0, porn: 0, sleep: "-" };
-      if (entry.type === '🚬') days[dateKey].cig++;
-      if (entry.type === '🔞/خودارضایی') days[dateKey].porn++;
-      if (entry.type === '🛌 ساعت خواب') days[dateKey].sleep = d.toTimeString().slice(0, 5);
-    });
-
-    const sorted = Object.entries(days).sort((a,b) => b[0].localeCompare(a[0])).slice(0, 10);
-    summaryLogBody.innerHTML = "";
-    sorted.forEach(([date, data]) => {
-      summaryLogBody.innerHTML += `<tr>
-        <td>${date}</td>
-        <td>${data.cig}</td>
-        <td>${data.porn}</td>
-        <td>${data.sleep}</td>
-      </tr>`;
-    });
-  }
-
-  render();
-  renderSummaryTable();
-
-  // 🔔 اعلان روزانه در ساعت ۹ شب
-  if (Notification && Notification.permission !== "granted") {
-    Notification.requestPermission();
-  }
-
-  function showDailyReminder() {
-    if (Notification && Notification.permission === "granted") {
-      new Notification("یادآوری", {
-        body: "یادت نره رفتارهای امروز رو ثبت کنی",
-        icon: "icon-192.png"
-      });
-    }
-  }
-
-  setInterval(() => {
-    const now = new Date();
-    if (now.getHours() === 21 && now.getMinutes() === 0) {
-      showDailyReminder();
-    }
-  }, 60000); // چک هر یک دقیقه
-
+document.addEventListener("DOMContentLoaded", () => {
+  renderToday();
+  renderSummary();
 });
 </script>
 </body>
