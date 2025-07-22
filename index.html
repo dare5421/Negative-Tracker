@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fa">
 <head>
@@ -6,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ردیاب منفی</title>
   <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <meta name="theme-color" content="#ffa726" />
   <style>
     body {
       font-family: sans-serif;
@@ -25,11 +26,8 @@
       margin-bottom: 20px;
     }
     .pill {
-      transition: background 0.2s;
-  
       width: 64px;
       height: 64px;
-      background: white;
       border-radius: 16px;
       display: flex;
       justify-content: center;
@@ -38,6 +36,7 @@
       position: relative;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       cursor: pointer;
+      transition: background 0.2s;
     }
     .badge {
       position: absolute;
@@ -67,13 +66,10 @@
       padding: 6px 12px;
       font-size: 14px;
       transition: background 0.2s;
-  }
-  button:hover {
-      background-color: #1565c0;
-  }
-      padding: 4px 8px;
-      font-size: 14px;
       cursor: pointer;
+    }
+    button:hover {
+      background-color: #1565c0;
     }
     .sleep-input {
       text-align: center;
